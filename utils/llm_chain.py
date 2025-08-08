@@ -89,7 +89,9 @@ if not OPENROUTER_API_KEY:
     raise RuntimeError("OPENROUTER_API_KEY environment variable is not set. Please set it in your environment or .env file.")
 
 # Optimized system prompt (shorter for faster processing)
-SYSTEM_PROMPT = """You are an expert insurance policy AI assistant. Use ONLY the provided clauses (each clause is a discrete point from the document) to answer questions. If information isn't in the clauses, state: 'Information not available in document.' Do NOT use any outside knowledge. Be concise, accurate, and professional."""
+SYSTEM_PROMPT = """You are an expert insurance policy AI assistant. Use ONLY the provided clauses (each clause is a discrete point from the document) to answer questions. 
+If information isn't in the clauses, state: 'Information not available in document.
+' Do NOT use any outside knowledge. Be concise, accurate, and professional."""
 
 # Global session for connection pooling
 _session: Optional[aiohttp.ClientSession] = None
