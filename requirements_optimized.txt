@@ -1,0 +1,10 @@
+# Optimized requirements for faster LLM processing
+aiohttp>=3.9.0
+requests>=2.31.0
+langchain-core>=0.1.0
+python-dotenv>=1.0.0
+
+# Optional performance enhancers
+uvloop>=0.19.0; sys_platform != "win32"  # Linux/Mac only
+cython>=3.0.0  # For potential C extensions
+orjson>=3.9.0  # Faster JSON parsing
