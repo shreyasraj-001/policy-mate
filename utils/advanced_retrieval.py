@@ -317,6 +317,7 @@ class AdvancedRetriever:
         
         # Keyword search
         keyword_matches = self._keyword_search(query)
+
         for idx in keyword_matches:
             if idx < len(self.documents):
                 doc = self.documents[idx]

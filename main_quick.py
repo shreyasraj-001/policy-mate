@@ -158,66 +158,22 @@ class Chunker:
         self.metadata = []
         self.quality_metrics = {}
         
-        # Use enhanced chunking framework with fallbacks
+        # Clause-level chunking using regex
         try:
-            print("🧠 Enhanced chunking in progress...")
-            
-            # Try enhanced adaptive chunking first
-            try:
-                from utils.enhanced_chunking import (
-                    EnhancedChunkingFramework, 
-                    ChunkingConfig, 
-                    ChunkingStrategy
-                )
-                
-                config = ChunkingConfig(
-                    chunk_size=self.chunk_size,
-                    chunk_overlap=self.chunk_overlap,
-                    strategy=ChunkingStrategy.ADAPTIVE,
-                    timeout_seconds=15
-                )
-                
-                framework = EnhancedChunkingFramework(config)
-                result = framework.chunk_document(text)
-                
-                self.chunks = result['chunks']
-                self.metadata = result.get('metadata', [])
-                self.quality_metrics = result.get('quality_metrics', {})
-                
-                print(f"✅ Enhanced chunking complete: {len(self.chunks)} chunks created")
-                print(f"📊 Quality score: {self.quality_metrics.get('content_preservation_score', 0):.3f}")
-                print(f"⏱️ Processing time: {result.get('performance', {}).get('total_time', 0):.2f}s")
-                
-            except ImportError:
-                print("⚠️ Enhanced chunking not available, using adaptive chunking...")
-                from utils.splitter import adaptive_split
-                self.chunks = adaptive_split(text, chunk_size=self.chunk_size, chunk_overlap=self.chunk_overlap)
-                print(f"✅ Adaptive chunking complete: {len(self.chunks)} chunks created")
-                
-            except Exception as e:
-                print(f"⚠️ Enhanced chunking failed ({e}), falling back to semantic chunking...")
-                self.chunks = semantic_split(text, chunk_size=self.chunk_size, chunk_overlap=self.chunk_overlap)
-                print(f"✅ Semantic chunking complete: {len(self.chunks)} chunks created")
-            
+            from utils.splitter import split_into_clauses
+            print("🧩 Splitting text into discrete clauses using regex...")
+            self.chunks = split_into_clauses(text)
+            # Optionally, attach document_id metadata for multi-document support
+            self.metadata = [{"document_id": getattr(self, "document_id", None), "clause_index": i} for i in range(len(self.chunks))]
+            print(f"✅ Clause-level chunking complete: {len(self.chunks)} clauses created")
             if self.chunks:
-                # Debug: Check chunk quality
-                first_chunk = self.chunks[0] if self.chunks else ""
-                print(f"📄 First chunk length: {len(first_chunk)}")
-                print(f"📄 First chunk preview: {first_chunk[:100]}...")
-                
-                # Check for empty chunks
-                non_empty_chunks = sum(1 for chunk in self.chunks if chunk.strip())
-                print(f"📊 Non-empty chunks: {non_empty_chunks}/{len(self.chunks)}")
-                
-                # Display quality metrics if available
-                if self.quality_metrics:
-                    print(f"📈 Average chunk length: {self.quality_metrics.get('avg_chunk_length', 0):.1f}")
-                    print(f"📏 Length consistency: {self.quality_metrics.get('length_consistency', 0):.3f}")
+                first_chunk = self.chunks[0]
+                print(f"📄 First clause length: {len(first_chunk)}")
+                print(f"📄 First clause preview: {first_chunk[:100]}...")
             else:
-                print("⚠️ No chunks created!")
-                
+                print("⚠️ No clauses created!")
         except Exception as e:
-            print(f"❌ All chunking methods failed: {e}")
+            print(f"❌ Clause-level chunking failed: {e}")
             raise e
     
     def save_chunks(self):
@@ -253,15 +209,19 @@ class VectorStore:
         self.vector_store = None
         self.distance_strategy = "COSINE"  # Explicitly set cosine similarity
         
-        # Convert chunks to Document objects if they're strings
-        if chunks and isinstance(chunks[0], str):
-            self.documents = [LangChainDocument(page_content=chunk) for chunk in chunks]
-        elif chunks and hasattr(chunks[0], 'page_content'):
-            # Chunks are already Document objects
-            self.documents = chunks
-        else:
-            # Fallback: convert to strings then to documents
-            self.documents = [LangChainDocument(page_content=str(chunk)) for chunk in chunks]
+        # Attach document_id metadata to each clause for multi-document support
+        # If metadata is available, use it; otherwise, fallback to plain chunk
+        self.documents = []
+        for i, chunk in enumerate(chunks):
+            meta = None
+            if hasattr(self, 'metadata') and self.metadata and i < len(self.metadata):
+                meta = self.metadata[i]
+            elif isinstance(chunk, dict) and 'document_id' in chunk:
+                meta = {"document_id": chunk["document_id"], "clause_index": chunk.get("clause_index", i)}
+            if meta:
+                self.documents.append(LangChainDocument(page_content=str(chunk), metadata=meta))
+            else:
+                self.documents.append(LangChainDocument(page_content=str(chunk)))
         
         print(f"✅ VectorStore initialized with {len(self.documents)} documents")
         print(f"📏 Distance strategy: {self.distance_strategy} (cosine similarity)")

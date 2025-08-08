@@ -1,3 +1,23 @@
+def split_into_clauses(text: str) -> list:
+    """
+    Split text into discrete clauses using regex for numbered/bulleted patterns.
+    Returns a list of clause strings.
+    """
+    import re
+    # Regex for numbered (1., 1.1., 1), bulleted (•, -, *)
+    clause_pattern = re.compile(r'(?:^|\n)(\d+(?:\.\d+)*[\).]|[•\-*])\s+')
+    # Find all clause starts
+    starts = [m.start() for m in clause_pattern.finditer(text)]
+    if not starts:
+        # fallback: split by double newlines
+        return [c.strip() for c in text.split('\n\n') if c.strip()]
+    starts.append(len(text))
+    clauses = []
+    for i in range(len(starts)-1):
+        clause = text[starts[i]:starts[i+1]].strip()
+        if clause:
+            clauses.append(clause)
+    return clauses
 """
 Optimized semantic text splitter utility for efficient chunking of documents
 Enhanced with multiple chunking strategies and intelligent fallbacks

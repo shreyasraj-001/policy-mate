@@ -73,7 +73,7 @@ logger = logging.getLogger(__name__)
 # OpenRouter configuration with optimized settings
 #paid api key
 
-OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY", "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")
+OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY", "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")
 # OPENROUTER_MODEL = "google/gemini-2.0-flash-001"
 
 
@@ -89,7 +89,7 @@ if not OPENROUTER_API_KEY:
     raise RuntimeError("OPENROUTER_API_KEY environment variable is not set. Please set it in your environment or .env file.")
 
 # Optimized system prompt (shorter for faster processing)
-SYSTEM_PROMPT = """You are an expert insurance policy AI assistant. Use ONLY the provided context to answer questions. If information isn't in the context, state: "Information not available in document." Be concise, accurate, and professional."""
+SYSTEM_PROMPT = """You are an expert insurance policy AI assistant. Use ONLY the provided clauses (each clause is a discrete point from the document) to answer questions. If information isn't in the clauses, state: 'Information not available in document.' Do NOT use any outside knowledge. Be concise, accurate, and professional."""
 
 # Global session for connection pooling
 _session: Optional[aiohttp.ClientSession] = None
